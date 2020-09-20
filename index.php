@@ -1,0 +1,475 @@
+
+<html>
+
+<head>
+    <title>WOTW - Routing tool</title>
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+    <link rel="manifest" href="/site.webmanifest">
+    <link rel="mask-icon" href="/safari-pinned-tab.svg" color="#5bbad5">
+    <meta name="msapplication-TileColor" content="#da532c">
+    <meta name="theme-color" content="#ffffff">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700;900&display=swap" rel="stylesheet">
+    <link href="oriwotw.0.1.6.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+</head>
+
+<body style="display:flex;flex-direction:row;padding:0px;margin:0px;">
+    <div id="map-container" style="position:relative;width:80%;height:100vh;overflow:hidden;background-color:black;"
+        onmouseup="clearMouseVars();" onclick="mouseClickEvents(event);" onmousedown="map.isDraggingMap = true;"
+        oncontextmenu="rightMouseClickEvents(event);return false;"
+        onmouseout="if (this.contains(event.target) === false) {map.isDraggingMap = false;}"
+        onwheel="map.zoomMap(event);">
+        <div id="mapzoom" style="transform:scale(1.0);">
+            <div id="orimap-container" style="transform:translate(-1393.4px, -227.027px);transform-origin: left top;">
+                <canvas id="orimap" height="1713" width="6193"></canvas>
+                <div id="anchor-textbox" onmousemove="event.preventDefault();event.stopPropagation();"
+                    class="map-elements-anchor" style="display:none;background-color:#4a4a4a;" tabindex="-1">
+                    <label tabindex="-1">Links</label>
+                    <div style="flex-direction: row;" tabindex="-1">
+                        <button class="popup-link-picker popup-onlyedit map-controls-button map-hover-info"
+                            data-popup="Add New Link, link this anchor with a map element"><span class="material-icons"
+                                style="font-size:32px;pointer-events: none;">link</span></button>
+                        <div id="anchor-links" style="display:flex;flex-direction: row;"></div>
+                    </div>
+                    <label tabindex="-1">Line Settings</label>
+                    <div tabindex="-1">
+                        <label style="margin-top:5px;">Is Gap
+                            <input type="checkbox">
+                        </label>
+                    </div>
+                    <label tabindex="-1">Anchor Info</label>
+                    <div tabindex="-1">
+                        <textarea class="popup-editable" placeholder="Info.."></textarea>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div id="controls" style="position:absolute;bottom:0;z-index:9999;margin:0px;max-width:100%;"
+            onmousemove="event.preventDefault();event.stopPropagation();">
+            <textarea id="context-menu-temp-clipboard"
+                style="font-size:0px;height:1px;width:1px;border:none;margin:0px;padding:0px;background-color:transparent;color:transparent;resize:none;"></textarea>
+            <div style="display:flex;flex-direction: row;justify-content: flex-start;margin-bottom:7px;">
+                <button class="map-controls-button map-hover-info" data-popup="Plays the route" data-active="false"
+                    id="playFrames"
+                    onclick="this.dataset.active = (this.dataset.active === 'true' ? false : true);this.children[0].textContent = (this.dataset.active === 'true' ? 'pause_circle_filled' : 'play_circle_filled');playFrames();event.preventDefault();event.stopPropagation();"><span
+                        class="material-icons">play_circle_filled</span></button>
+                <button class="map-controls-button map-hover-info" data-popup="Save changes" id="saveBranches"
+                    onclick="toggleBoolean(event, 'save');"><span class="material-icons">save</span></button>
+                <button class="map-controls-button map-hover-info" active="false"
+                    data-popup="Only displays the active branch"
+                    onclick="toggleBoolean(event, 'isOnlyActiveBranch');"><span
+                        class="material-icons">layers_clear</span></button>
+                <button class="map-controls-button map-hover-info" active="false"
+                    data-popup="Enables editing of most controls" onclick="toggleBoolean(event, 'isEditingMode');"><span
+                        class="material-icons">build</span></button>
+                <button class="map-controls-button map-hover-info" active="false" data-popup="Create new branch"
+                    id="paintMode" onclick="createNewBranch();"><span class="material-icons">mediation</span></button>
+                    <button class="map-controls-button map-hover-info" active="false" data-popup="Duplicate active branch"
+                    id="duplicateBranch" onclick="if(activeBranch) {activeBranch.duplicateBranch();}"><span class="material-icons">content_copy</span></button>
+                <button class="map-controls-button map-hover-info" active="false" data-popup="Paint path" id="paintMode"
+                    onclick="toggleBoolean(event, 'isPaintMode');"><span class="material-icons">create</span></button>
+                <button class="map-controls-button map-hover-info" active="false" data-popup="Paint subpath"
+                    id="subPaintMode" onclick="toggleBoolean(event, 'isSubPathMode');"><span
+                        class="material-icons">alt_route</span></button>
+                <button class="map-controls-button map-hover-info" active="false"
+                    data-popup="Format Paths, clicking adds a new node, holding ctrl removes nodes" id="nodeMode"
+                    onclick="toggleBoolean(event, 'isNodeMode');"><span class="material-icons">timeline</span></button>
+                <button class="map-controls-button map-hover-info" active="false" data-popup="Add strat"
+                    id="commentMode" onclick="toggleBoolean(event, 'isCommentMode');"><span
+                        class="material-icons">post_add</span></button>
+                <button class="map-controls-button map-hover-info" active="false" data-popup="Add Icon" id="iconMode"
+                    onclick="toggleBoolean(event, 'isPlacingIcon');"><span
+                        class="material-icons">add_photo_alternate</span></button>
+                <button class="map-controls-button map-hover-info" active="false" data-popup="Create hitbox"
+                    id="inGameBoxMode" onclick="toggleBoolean(event, 'isInGameBoxMode');"><span
+                        class="material-icons">fullscreen</span></button>
+                <div style="display:flex;flex-direction:column; width:125px;" class="map-hover-info"
+                    data-popup="First values is tool location, second is in game coordinates. Right click on the map to copy them">
+                    <label type="text" style="width:140px;" class="map-controls-input ori-unselectable"
+                        id="map-element-mouse-position"></label>
+                    <input type="text" style="width:140px;" class="map-controls-input ori-unselectable"
+                        id="map-element-mouse-position-game">
+                </div>
+                <label style="color:white;align-self:flex-end;font-weight: 600;" class="ori-unselectable"
+                    id="current-map-location"></label>
+            </div>
+            <div class="frame-container">
+                <div id="framecontainer" style="position:relative;display:flex;flex-direction: row;height:50px;">
+                    <label id="framemover" class="frame-mover">|</label>
+                    <label class="frame-labels">1</label>
+                    <label class="frame-labels">10</label>
+                    <label class="frame-labels">20</label>
+                    <label class="frame-labels">30</label>
+                    <label class="frame-labels">40</label>
+                    <label class="frame-labels">50</label>
+                    <label class="frame-labels">60</label>
+                    <label class="frame-labels">70</label>
+                    <label class="frame-labels">80</label>
+                    <label class="frame-labels">90</label>
+                    <label class="frame-labels">100</label>
+                    <div
+                        style="height:20px;width:calc(100% + 5px);position:absolute;bottom:0;background: repeating-linear-gradient(90deg, rgb(255, 255, 255) 0px, rgb(255, 255, 255) 0px, rgba(255, 255, 255, 0) 1px, rgba(255, 255, 255, 0) 14px) repeat scroll 0% 0%;">
+                    </div>
+                    <div
+                        style="height:35px;width:100%;position:absolute;bottom:0;background: repeating-linear-gradient(90deg, rgb(255, 223, 05) 0px, rgb(255, 223, 0) 1px, rgba(255, 255, 255, 0) 2px, rgba(255, 255, 255, 0) 70px) repeat scroll 0% 0%;">
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div id="popup-container" class="popup-container" onmouseover="event.preventDefault();event.stopPropagation();"
+            onmousemove="event.preventDefault();event.stopPropagation();">
+            <div style="display:flex;width:100%;align-items:baseline;">
+                <label class="popup-label-bold">Strat:</label>
+                <input class="popup-editable popup-label" data-type="name" value="Name" style="width:100%;font-family: 'Roboto', sans-serif;">
+            </div>
+            <div style="display:flex;width:100%;align-items:baseline;">
+                <label class="popup-label-bold">Category:</label>
+                <input class="popup-editable popup-label" data-type="category" value="Text" style="width:100%;font-family: 'Roboto', sans-serif;">
+            </div>
+            <div style="display:flex;flex-direction: row;width:100%;min-height:19px;">
+                <div class="popup-noedit">
+                    <label class="popup-label-bold">Required:</label>
+                    <label class="popup-label" data-type="required"></label>
+                </div>
+                <fieldset class="popup-onlyedit branch-path-child-categories"
+                    style="padding:3px;flex-direction:column;align-items:flex-start;margin:0px 3px;max-height:130px;flex-wrap:wrap;width:100%;">
+                    <legend style="font-size:12px;">Required</legend>
+                    <label style="font-size:10px;display:flex;"><input type="checkbox" class="branch-path-limitations"
+                            data-type="required" value="Bash" style="transform:scale(0.6);margin:0px;">Bash</label></br>
+                    <label style="font-size:10px;display:flex;"><input type="checkbox" class="branch-path-limitations"
+                            data-type="required" value="Blaze"
+                            style="transform:scale(0.6);margin:0px;">Blaze</label></br>
+                    <label style="font-size:10px;display:flex;"><input type="checkbox" class="branch-path-limitations"
+                            data-type="required" value="Charge Blaze" style="transform:scale(0.6);margin:0px;">Charge
+                        Blaze</label></br>
+                    <label style="font-size:10px;display:flex;"><input type="checkbox" class="branch-path-limitations"
+                            data-type="required" value="Spirit Arc" style="transform:scale(0.6);margin:0px;">Spirit
+                        Arc</label></br>
+                    <label style="font-size:10px;display:flex;"><input type="checkbox" class="branch-path-limitations"
+                            data-type="required" value="Spirit Star" style="transform:scale(0.6);margin:0px;">Spirit
+                        Star</label></br>
+                    <label style="font-size:10px;display:flex;"><input type="checkbox" class="branch-path-limitations"
+                            data-type="required" value="Launch"
+                            style="transform:scale(0.6);margin:0px;">Launch</label></br>
+                    <label style="font-size:10px;display:flex;"><input type="checkbox" class="branch-path-limitations"
+                            data-type="required" value="Dash" style="transform:scale(0.6);margin:0px;">Dash</label></br>
+                    <label style="font-size:10px;display:flex;"><input type="checkbox" class="branch-path-limitations"
+                            data-type="required" value="Burrow"
+                            style="transform:scale(0.6);margin:0px;">Burrow</label></br>
+                    <label style="font-size:10px;display:flex;"><input type="checkbox" class="branch-path-limitations"
+                            data-type="required" value="Double Jump" style="transform:scale(0.6);margin:0px;">Double
+                        Jump</label></br>
+                    <label style="font-size:10px;display:flex;"><input type="checkbox" class="branch-path-limitations"
+                            data-type="required" value="Flash"
+                            style="transform:scale(0.6);margin:0px;">Flash</label></br>
+                    <label style="font-size:10px;display:flex;"><input type="checkbox" class="branch-path-limitations"
+                            data-type="required" value="Glide"
+                            style="transform:scale(0.6);margin:0px;">Glide</label></br>
+                    <label style="font-size:10px;display:flex;"><input type="checkbox" class="branch-path-limitations"
+                            data-type="required" value="Spirit Smash" style="transform:scale(0.6);margin:0px;">Spirit
+                        Smash</label></br>
+                    <label style="font-size:10px;display:flex;"><input type="checkbox" class="branch-path-limitations"
+                            data-type="required" value="Leash"
+                            style="transform:scale(0.6);margin:0px;">Leash</label></br>
+                    <label style="font-size:10px;display:flex;"><input type="checkbox" class="branch-path-limitations"
+                            data-type="required" value="Light Burst" style="transform:scale(0.6);margin:0px;">Light
+                        Burst</label></br>
+                    <label style="font-size:10px;display:flex;"><input type="checkbox" class="branch-path-limitations"
+                            data-type="required" value="Regenerate"
+                            style="transform:scale(0.6);margin:0px;">Regenerate</label></br>
+                    <label style="font-size:10px;display:flex;"><input type="checkbox" class="branch-path-limitations"
+                            data-type="required" value="Shock Smash" style="transform:scale(0.6);margin:0px;">Shock
+                        Smash</label></br>
+                    <label style="font-size:10px;display:flex;"><input type="checkbox" class="branch-path-limitations"
+                            data-type="required" value="Spirit Sentry" style="transform:scale(0.6);margin:0px;">Spirit
+                        Sentry</label></br>
+                    <label style="font-size:10px;display:flex;"><input type="checkbox" class="branch-path-limitations"
+                            data-type="required" value="Sentry Speed" style="transform:scale(0.6);margin:0px;">Sentry
+                        Speed</label></br>
+                    <label style="font-size:10px;display:flex;"><input type="checkbox" class="branch-path-limitations"
+                            data-type="required" value="Spike"
+                            style="transform:scale(0.6);margin:0px;">Spike</label></br>
+                    <label style="font-size:10px;display:flex;"><input type="checkbox" class="branch-path-limitations"
+                            data-type="required" value="Swim Dash" style="transform:scale(0.6);margin:0px;">Swim
+                        Dash</label></br>
+                    <label style="font-size:10px;display:flex;"><input type="checkbox" class="branch-path-limitations"
+                            data-type="required" value="Spirit Edge" style="transform:scale(0.6);margin:0px;">Spirit
+                        Edge</label></br>
+                    <label style="font-size:10px;display:flex;"><input type="checkbox" class="branch-path-limitations"
+                            data-type="required" value="Water Breathe" style="transform:scale(0.6);margin:0px;">Water
+                        Breathe</label></br>
+                    <label style="font-size:10px;display:flex;"><input type="checkbox" class="branch-path-limitations"
+                            data-type="required" value="Weapon Upgrade 1"
+                            style="transform:scale(0.6);margin:0px;">Weapon Upgrade 1</label></br>
+                    <label style="font-size:10px;display:flex;"><input type="checkbox" class="branch-path-limitations"
+                            data-type="required" value="Weapon Upgrade 2"
+                            style="transform:scale(0.6);margin:0px;">Weapon Upgrade 2</label></br>
+                    <label style="font-size:10px;display:flex;"><input type="checkbox" class="branch-path-limitations"
+                            data-type="required" value="Torch"
+                            style="transform:scale(0.6);margin:0px;">Torch</label></br>
+                    <label style="font-size:10px;display:flex;"><input type="checkbox" class="branch-path-limitations"
+                            data-type="required" value="Fast Travel" style="transform:scale(0.6);margin:0px;">Fast
+                        Travel</label></br>
+                </fieldset>
+            </div>
+            <div class="popup-editable popup-text" data-type="text" style="display:block;line-height:1.15;">Text</div>
+            <input class="popup-editable popup-url" style="width:100%;" data-type="url" type="text"
+                oninput="this.nextElementSibling.href = this.nextElementSibling.textContent = this.value;">
+            <a href=""></a>
+        </div>
+        <div id="context-menu" class="context-menu" onclick="this.style.display = 'none';">
+            <button id="context-menu-copy-coords" onclick="copyToClipboard(this.dataset.coords);">Copy map
+                coordinates</button>
+            <button id="context-menu-copy-ingame-coords" onclick="copyToClipboard(this.dataset.coords);">Copy in-game
+                coordinates</button>
+            <button id="context-menu-url" onclick="getShareableLink(this.dataset.type, this.dataset.data);">Get
+                URL</button>
+        </div>
+    </div>
+    <div id="controls-container" class="controls-container">
+        <div class="map-elements">
+            <div class="dropdown" toggle="false">
+                <label onclick="toggleDropdown(this, event);">Routes</label>
+                <div class="map-elements-container map-elements-routes"></div>
+                <div class="dropdown dropdown-child map-elements-container" toggle="false"
+                    style="flex-direction: column;padding:0px;">
+                    <label onclick="toggleDropdown(this, event);">New Route</label>
+                    <div id="new-route-container" class="new-route-container">
+                        <div class="new-route-row-container">
+                            <label>Name</label>
+                            <input type="text" id="new-route-name">
+                        </div>
+                        <div class="new-route-row-container">
+                            <label>Category</label>
+                            <input list="category-names" id="new-route-category">
+                            <datalist id="category-names">
+                                <option value="Any%">
+                                <option value="100%">
+                                <option value="Main Quest Order">
+                                <option value="All Challenges">
+                                <option value="Low%">
+                            </datalist>
+                        </div>
+                        <div class="new-route-row-container">
+                            <label>Difficulty</label>
+                            <select id="new-route-difficulty">
+                                <option value="easy">Easy</option>
+                                <option value="normal">Normal</option>
+                                <option value="hard">Hard</option>
+                            </select>
+                        </div>
+                        <div class="new-route-row-container">
+                            <label>Restriction</label>
+                            <select id="new-route-oob">
+                                <option value="oob">Unrestricted</option>
+                                <option value="noob">No Out of Bounds</option>
+                            </select>
+                        </div>
+                        <button class="fake-button" onclick="createNewRoute();">Create Route</button>
+                    </div>
+                </div>
+            </div>
+            <div class="dropdown" toggle="false">
+                <label onclick="toggleDropdown(this, event);">Current Route</label>
+                <div id="current-route-container" class="current-route-container">
+                    <div class="current-route-info">
+                        <div class="current-route-info-wrapper">
+                            <label class="current-route-info-label">Name:</label>
+                            <label class="current-route-name current-route-hide-editonly"></label>
+                            <input class="current-route-editonly" type="text"
+                                oninput="activeRoute.name = this.value; activeRoute.hasChanged = true;">
+                        </div>
+                        <div class="current-route-info-wrapper">
+                            <label class="current-route-info-label">Category:</label>
+                            <label class="current-route-category current-route-hide-editonly"></label>
+                            <input class="current-route-editonly" list="category-names"
+                                oninput="activeRoute.category = this.value;">
+                        </div>
+                        <div class="current-route-info-wrapper">
+                            <label class="current-route-info-label">Difficulty:</label>
+                            <label class="current-route-difficulty current-route-hide-editonly"></label>
+                            <select class="current-route-editonly"
+                                onchange="activeRoute.difficulty = this.value; activeRoute.hasChanged = true;">
+                                <option value="easy">Easy</option>
+                                <option value="normal">Normal</option>
+                                <option value="hard">Hard</option>
+                            </select>
+                        </div>
+                        <div class="current-route-info-wrapper">
+                            <label class="current-route-info-label">OOB:</label>
+                            <label class="current-route-oob current-route-hide-editonly"></label>
+                            <select class="current-route-editonly"
+                                onchange="activeRoute.oob = this.value; activeRoute.hasChanged = true;">
+                                <option value="oob">Unrestricted</option>
+                                <option value="noob">No Out of Bounds</option>
+                            </select>
+                        </div>
+                    </div>
+                    <label class="current-route-info-label" style="margin-top:5px;">Branches</label>
+                    <div style="margin-bottom:5px;" class="current-route-branches map-elements-container"></div>
+                    <span class="material-icons" draggable="true" garbage="true" ondrop="onDrop(event);"
+                        ondragover="onDragOver(event);">delete_forever</span>
+                    <div>
+                        <select id="current-route-branches-list" class="current-route-branches-list"></select>
+                        <label for="current-route-branches-list" class="fake-button"
+                            onclick="activeRoute.addBranch(this.control.value);">Add Branch</label>
+                    </div>
+                </div>
+            </div>
+            <div class="dropdown" toggle="false">
+                <label onclick="toggleDropdown(this, event);">Branches</label>
+                <div class="map-elements-container">
+                    <div class="dropdown" toggle="false" style="margin-bottom:5px;">
+                        <label onclick="toggleDropdown(this, event);">Filters</label>
+                        <div class="map-elements-container map-elements-filters"
+                            style="width:100%;margin-bottom:5px;padding:0px;">
+                            <fieldset class="map-elements-strat-area-filter map-elements-filter-container"
+                                style="width:290px;max-height:86px;margin:5px;"></fieldset>
+                        </div>
+                    </div>
+                    <div class="map-elements-container map-elements-branches"></div>
+                </div>
+            </div>
+            <div class="dropdown" toggle="false">
+                <label onclick="toggleDropdown(this, event);">Strats</label>
+                <div class="map-elements-container">
+                    <label class="fake-button ori-unselectable" id="strat-vis-toggle" data-toggle="false"
+                        onclick="togglePopupsOnMap();">Show All</label>
+                    <div class="dropdown" toggle="false" style="margin-bottom:5px;">
+                        <label onclick="toggleDropdown(this, event);">Filters</label>
+                        <div class="map-elements-container map-elements-filters"
+                            style="width:100%;margin-bottom:5px;padding:0px;">
+                            <fieldset class="map-elements-strat-area-filter map-elements-filter-container"
+                                style="width:290px;max-height:86px;margin:5px;"></fieldset>
+                            <fieldset class="map-elements-strat-required-filter map-elements-filter-container"
+                                style="width:210px;max-height:86px;margin:5px;"></fieldset>
+                        </div>
+                    </div>
+                    <div class="map-elements-container map-elements-comments"></div>
+                </div>
+            </div>
+            <div class="dropdown" toggle="false">
+                <label onclick="toggleDropdown(this, event);">Icons</label>
+                <div class="map-elements-container map-element-ori-icons icon-picker-dropdown"
+                    onclick="if (isEditingMode) {setIconFromSheet(event.target);}">
+                </div>
+            </div>
+            <div class="dropdown" toggle="false">
+                <label onclick="toggleDropdown(this, event);">Route Details</label>
+                <div class="map-elements-container map-elements-route-details" style="max-height:600px;">
+                    <div id="inventory" class="map-elements-container map-elements-inventory" style="flex-wrap:nowrap;">
+                    </div>
+                    <div id="branch-paths" class="map-elements-container map-elements-route-details"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+<template id="popup-template">
+    <div class="popup" onmouseover="loadStratData(this, this.dataset.popupId);"
+        oninput="if (event.target.dataset.type) {updateStrat(this.dataset.popupId, event.target);}">
+        <span class="map-comment-icon" style="display:flex;"
+            onmousedown="commentBeingDragged = this;activeIconPicker = this;"></span>
+    </div>
+</template>
+<template id="map-elements-route">
+    <div class="map-elements-route">
+        <label class="current-route-name"></label>
+        <div>
+            <div>
+                <label class="current-route-info-label">Difficulty:</label>
+                <label class="current-route-difficulty"></label>
+            </div>
+            <div>
+                <label class="current-route-info-label">Category:</label>
+                <label class="current-route-category"></label>
+            </div>
+            <div>
+                <label class="current-route-info-label">OOB:</label>
+                <label class="current-route-oob"></label>
+            </div>
+        </div>
+    </div>
+</template>
+<template id="branch-path-template">
+    <div class="branch-part-path">
+        <div class="branch-part-onlyedit">
+            <label class="branch-path-child-noedit branch-path-child-start" style="width:25px;"></label>
+            <label class="branch-path-child-noedit branch-path-child-end" style="width:25px;"></label>
+            <input type="number" class="branch-path-child branch-path-child-subnode-index">
+        </div>
+        <div class="branch-path-child-onlyedit" style="display:flex;align-items:flex-start;">
+            <fieldset class="branch-part-onlyedit branch-path-child-categories"
+                style="padding:3px;flex-direction:column;align-items:flex-start;margin:0px 3px;">
+                <legend style="font-size:12px;">Categories</legend>
+                <label style="font-size:10px;display:flex;"><input type="checkbox" class="branch-path-limitations"
+                        data-type="categories" value="Any%" style="transform:scale(0.6);margin:0px;">Any%</label></br>
+                <label style="font-size:10px;display:flex;"><input type="checkbox" class="branch-path-limitations"
+                        data-type="categories" value="Main Quest Order" style="transform:scale(0.6);margin:0px;">Main
+                    Quest Order</label></br>
+                <label style="font-size:10px;display:flex;"><input type="checkbox" class="branch-path-limitations"
+                        data-type="categories" value="100%" style="transform:scale(0.6);margin:0px;">100%</label></br>
+                <label style="font-size:10px;display:flex;"><input type="checkbox" class="branch-path-limitations"
+                        data-type="categories" value="All Challenges" style="transform:scale(0.6);margin:0px;">All
+                    Challenges</label></br>
+                <label style="font-size:10px;display:flex;"><input type="checkbox" class="branch-path-limitations"
+                        data-type="categories" value="Low%" style="transform:scale(0.6);margin:0px;">Low%</label></br>
+            </fieldset>
+            <fieldset class="branch-part-onlyedit branch-path-child-difficulties"
+                style="padding:3px;flex-direction:column;align-items:flex-start;margin:0px 3px;">
+                <legend style="font-size:12px;">Difficulties</legend>
+                <label style="font-size:10px;display:flex;"><input type="checkbox" class="branch-path-limitations"
+                        data-type="difficulties" value="easy" style="transform:scale(0.6);margin:0px;">Easy</label></br>
+                <label style="font-size:10px;display:flex;"><input type="checkbox" class="branch-path-limitations"
+                        data-type="difficulties" value="normal"
+                        style="transform:scale(0.6);margin:0px;">Normal</label></br>
+                <label style="font-size:10px;display:flex;"><input type="checkbox" class="branch-path-limitations"
+                        data-type="difficulties" value="hard" style="transform:scale(0.6);margin:0px;">Hard</label></br>
+            </fieldset>
+            <fieldset class="branch-part-onlyedit branch-path-child-restrictions"
+                style="padding:3px;flex-direction:column;align-items:flex-start;margin:0px 3px;">
+                <legend style="font-size:12px;">Restrictions</legend>
+                <label style="font-size:10px;display:flex;"><input type="checkbox" class="branch-path-limitations"
+                        data-type="restrictions" value="oob"
+                        style="transform:scale(0.6);margin:0px;">Unrestricted</label></br>
+                <label style="font-size:10px;display:flex;"><input type="checkbox" class="branch-path-limitations"
+                        data-type="restrictions" value="noob" style="transform:scale(0.6);margin:0px;">No Out of
+                    Bounds</label></br>
+            </fieldset>
+        </div>
+        <div class="branch-part-onlyedit">
+            <label style="color:white;font-size:12px;">Color:</label>
+            <input type="text" class="branch-path-child branch-path-child-color">
+        </div>
+        <div class="branch-path-child branch-path-child-text" style="font-size:13px;font-weight:500;"></div>
+        <div class="branch-path-node-texts"></div>
+    </div>
+</template>
+<template id="map-elements-strat">
+    <div class="map-elements-strat">
+        <label class="strat-name"></label>
+        <div>
+            <span class="map-icon-normal strat-icon"></span>
+            <div>
+                <label class="strat-category"></label>
+                <label class="strat-required"></label>
+                <label class="strat-location"></label>
+            </div>
+        </div>
+    </div>
+</template>
+<template id="map-elements-current-route-branches">
+    <div class="map-elements-current-route-branches" draggable="true" ondragstart="onDragStart(event);"
+        ondragover="onDragOver(event);" ondragenter="onDragEnter(event);" ondragexit="onDragExit(event);"
+        ondragend="onDragEnd(event);" ondrop="onDrop(event);">
+        <span class="map-elements-current-route-branches-color"></span>
+        <label class="map-elements-current-route-branches-name"></label>
+        <label class="map-elements-current-route-branches-location"></label>
+        <div class="map-elements-current-route-branches-pickups"></div>
+    </div>
+</template>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+<script type="text/javascript" src="oriwotwicondatanew.0.0.7.js"></script>
+<script type="text/javascript" src="oriwotw.0.5.0.js"></script>
