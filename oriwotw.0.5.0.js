@@ -2139,7 +2139,7 @@ ctxPaint.imageSmoothingEnabled = false;
 document.getElementById('orimap-container').appendChild(cvsPaint);
 
 img.crossOrigin = "Anonymous";
-img.src = 'oriwotwmap.0.1.9.webp';
+img.src = 'oriwotwmap.0.2.0.webp';
 img.addEventListener('load', function () {
     ctxMap.drawImage(img, 0, 0);
     ctxMap.drawImage(img, 0, 0);
